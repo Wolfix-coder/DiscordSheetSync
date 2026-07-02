@@ -33,15 +33,23 @@ def create_bot(worksheet):
                 if snapshot.embeds:
                     for embed in snapshot.embeds:
                         data = pars_data.parseEmbed(embed.to_dict())
-                        write_players_to_sheet(data, worksheet)
+                        count = write_players_to_sheet(data, worksheet)
+
+                        await message.channel.send(f'Записано {count} профілів.')
+
+
 
     return bot
 
 
-def write_players_to_sheet(data: list[dict], worksheet):
+def write_players_to_sheet(data: list[dict], worksheet) -> int:
+    count = 0
     for item in data:
         resolved_url = convert_steam_url.resolveSteamUrlToId(item["steam_url"])
         item["steam_url"] = resolved_url
 
         row = ["", item["name"], resolved_url, "", "", item["value"]]
         google_sheets_service.append_row(worksheet, row)
+
+        count += 1
+    return count
