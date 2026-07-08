@@ -5,6 +5,7 @@ load_dotenv()
 
 class Config:
     BOT_TOKEN = os.getenv("TOKEN")
+    DATABASE_PATH = os.getenv("DATABASE_PATH")
 
     # Bots or admins ID the bot will listen to
     ADMIN_ID = [int(x) for x in os.getenv("ADMIN_ID").split(",")]

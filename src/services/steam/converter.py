@@ -14,8 +14,15 @@ class ConvertSteamUrl:
         """Склеювання посилання та steam_id"""
         return ("https://steamcommunity.com/profiles/" + steam_id)
     
-    def resolveSteamUrlToId(self, url: str) -> str:
-        """Конвертація url із username в url із steam_id"""
+    def resolveSteamUrlToId(self, url: str) -> tuple[str, str]:
+        """Конвертація url із username в url із steam_id
+            Args:
+                url: str -- Посилання на профіль гравця
+            Returns:
+                tuple[str, str]:
+                    steam_id: str -- id гравця
+                    url: str -- Посилання на профіль гравця в форматі із ID
+                """
         steam_id = self.get_steam_id(url)
         url = self.link_merging(steam_id)
-        return url
+        return steam_id, url

@@ -1,5 +1,7 @@
 from disnake import Client, Intents
+from datetime import datetime
 
+from src.services.database_service import DBService
 from src.services.google_sheets import GoogleSheetsService
 from src.services.steam.converter import ConvertSteamUrl
 from src.utils.pars_data import ParsData
@@ -12,6 +14,7 @@ intents.message_content = True
 pars_data = ParsData()
 convert_steam_url = ConvertSteamUrl()
 google_sheets_service = GoogleSheetsService()
+database_service = DBService()
 
 
 def create_bot(worksheet):
@@ -33,23 +36,33 @@ def create_bot(worksheet):
                 if snapshot.embeds:
                     for embed in snapshot.embeds:
                         data = pars_data.parseEmbed(embed.to_dict())
-                        count = write_players_to_sheet(data, worksheet)
+                        count = await write_players_to_sheet(data, worksheet, message) 
 
                         await message.channel.send(f'Записано {count} профілів.')
-
-
 
     return bot
 
 
-def write_players_to_sheet(data: list[dict], worksheet) -> int:
+async def write_players_to_sheet(data: list[dict], worksheet, message) -> int:
     count = 0
+    date = datetime.now()
+    date_format = date.strftime("%d.%m")
+
     for item in data:
-        resolved_url = convert_steam_url.resolveSteamUrlToId(item["steam_url"])
+
+        steam_id, resolved_url = convert_steam_url.resolveSteamUrlToId(item["steam_url"])
         item["steam_url"] = resolved_url
 
-        row = ["", item["name"], resolved_url, "", "", item["value"]]
-        google_sheets_service.append_row(worksheet, row)
+        status = await database_service.get_by_id("user_data", "STEAM_ID", steam_id)
 
-        count += 1
+        if not status:
+            await database_service.create_user(steam_id, item["name"])
+
+            row = [date_format, item["name"], resolved_url, "", "", item["value"]]
+            google_sheets_service.append_row(worksheet, row)
+
+            count += 1
+        else:
+            await message.channel.send(f"Гравець {item['name']} вже доданий до таблиці.")
+
     return count
