@@ -1,12 +1,22 @@
 import requests
+import re
 
 class ConvertSteamUrl:
     def get_steam_id(self, url: str) -> str:
         """Отримання steam_id"""
         try:
-            profile_req = requests.get(url)
-            steamid = str(profile_req.text.split("\"steamid\":\"")[1].split("\"")[0])
-            return steamid
+            if url.split("/")[3] == "profiles":
+                return url.split("/")[4]
+            elif url.split("/")[3] == "id":
+                username = url.split("/")[4]
+                profile_req = requests.get(f"https://steamid.io/lookup/{username}")
+                match = re.search(r'\b(\d{17})\b', profile_req.text)
+
+                if match:
+                    return match.group(1)
+            else:
+                print(f"Неправильний тип посилання: {url}")
+
         except Exception as e:
             print(f" ERROR  -- -- Помилка під час коніертації url: {e}")
 
